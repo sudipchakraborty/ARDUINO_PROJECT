@@ -1,20 +1,38 @@
-// High-resolution PWM on Arduino Mega using Timer3 (for pin 2)
+#include "Arduino.h"
+#include "PWM.h"
+//__________________________________________________________________________________________________________________________________________________________________
+PWM::PWM()  // // Constructor
+{
 
-// Define the PWM parameters
-#define PWM_PIN 2          // Pin 2 (OC3B) connected to the motor
-#define PWM_FREQUENCY 600000// Frequency in Hz (e.g., 2 kHz)
-#define DUTY_CYCLE 50      // Duty cycle in percentage (e.g., 50%)
-
-void setup() {
-  pinMode(PWM_PIN, OUTPUT); // Set PWM pin as output
-  digitalWrite(PWM_PIN,LOW);
-  setupTimer3(PWM_FREQUENCY, DUTY_CYCLE);
-  updateDutyCycle(1);
 }
-
-void loop() {
-  // Your main code here (if needed)
+//__________________________________________________________________________________________________________________________________________________________________
+void PWM::init(char pin, int frequency, char duty_cycle)
+{
+  //   // pinMode(PWM_PIN, OUTPUT); // Set PWM pin as output
+//   // digitalWrite(PWM_PIN,LOW);
+//   // setupTimer3(PWM_FREQUENCY, DUTY_CYCLE);
+//   // updateDutyCycle(1);
 }
+//__________________________________________________________________________________________________________________________________________________________________
+// void setup2() {
+//   // pinMode(PWM_PIN, OUTPUT); // Set PWM pin as output
+//   // digitalWrite(PWM_PIN,LOW);
+//   // setupTimer3(PWM_FREQUENCY, DUTY_CYCLE);
+//   // updateDutyCycle(1);
+// }
+
+// void loop2() {
+//   // Your main code here (if needed)
+// }
+//__________________________________________________________________________________________________________________________________________________________________
+
+// Function to update duty cycle dynamically
+void updateDutyCycle(int dutyCycle) {
+  int timerCounts = ICR3;
+  int dutyCounts = (timerCounts * dutyCycle) / 100;
+  OCR3B = dutyCounts; // Update the duty cycle
+}
+//__________________________________________________________________________________________________________________________________________________________________
 
 // Function to set up Timer3 for high-resolution PWM
 void setupTimer3(int frequency, int dutyCycle) {
@@ -36,10 +54,5 @@ void setupTimer3(int frequency, int dutyCycle) {
   ICR3 = timerCounts; // Set the TOP value
   OCR3B = dutyCounts; // Set the duty cycle
 }
+//__________________________________________________________________________________________________________________________________________________________________
 
-// Function to update duty cycle dynamically
-void updateDutyCycle(int dutyCycle) {
-  int timerCounts = ICR3;
-  int dutyCounts = (timerCounts * dutyCycle) / 100;
-  OCR3B = dutyCounts; // Update the duty cycle
-}
