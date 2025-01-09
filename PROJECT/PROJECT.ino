@@ -1,12 +1,33 @@
 //#include "door.h"
 #include "StatusBlink.h"
-#include "PWM.h"
+
+#include "motorDC.h"
 ///////////////////////////////////////////////////////////////////////////
 #define PIN_Motor  23
 int count=0;
-extern struct project prj;
 
-PWM pwm;
+
+///////////////////////////////////////
+struct project
+{
+  char FSM;
+  int  Waiting_Count;
+};
+
+enum FSM
+{
+  FSM_Init,
+  FSM_Read_Motion_Sensor,
+  FSM_Read_Initial_Sensor,
+  FSM_Waiting_For_Terminal_Trigger,
+  FSM_Waiting_Door_Clear,
+  FSM_Waiting_For_Full_Close
+};
+
+
+struct project prj;
+
+
 
 ////////////////////////////////////////////////////////////////////////////
 void setup() 
@@ -15,7 +36,7 @@ void setup()
   Serial.begin(115200); 
   prj.FSM=FSM_Init;
   prj.Waiting_Count=0;
-  pwm.init(2, 20000, 50);
+
 }
 ////////////////////////////////////////////////////////////////////////////
 void loop() 
