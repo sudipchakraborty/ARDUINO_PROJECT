@@ -1,21 +1,39 @@
 #include "door.h"
 #include <Arduino.h>
-
-struct project prj;
-
-//////////////////////////////////////
-void systemStateHandler(void)
+//___________________________________________________________________________________________________________________________________________________________
+door::door()
 {
-  switch(prj.FSM)
+}
+//___________________________________________________________________________________________________________________________________________________________
+void door::init(void)
+{
+   FSM=FSM_Init;
+   Waiting_Count=0;
+}
+//___________________________________________________________________________________________________________________________________________________________
+void door::handle(void)
+{
+    switch(FSM)
   {
-    case FSM_Init:
-      Serial.println("System Init State");
-      prj.FSM=FSM_Read_Motion_Sensor;
+    case FSM_Init:   
+      FSM=FSM_Read_button;
     break;
     //////////////////
+    case FSM_Read_button:
+    
+      FSM=FSM_Read_Camera_Trigger;
+    break;
+    ///////////////////
+    case FSM_Read_Camera_Trigger:
+
+      FSM=FSM_Read_Motion_Sensor;
+
+    break;
+    ////////////////////
     case FSM_Read_Motion_Sensor:
 
-    Serial.print("Waiting for Motion Sensor Trigger>");Serial.println(prj.Waiting_Count);
+    Serial.print("Waiting for Motion Sensor Trigger>");Serial.println(Waiting_Count);
+    FSM=FSM_Read_button;
     break;
     /////////////////
     case FSM_Read_Initial_Sensor:
@@ -37,6 +55,6 @@ void systemStateHandler(void)
     defult:
     break;
   } 
-    prj.Waiting_Count++;
+    Waiting_Count++;
 }
-///////////////////////////////////////////////
+//___________________________________________________________________________________________________________________________________________________________

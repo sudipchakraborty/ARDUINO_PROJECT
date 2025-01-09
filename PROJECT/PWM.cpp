@@ -3,39 +3,42 @@
 //__________________________________________________________________________________________________________________________________________________________________
 PWM::PWM()  // // Constructor
 {
-
 }
 //__________________________________________________________________________________________________________________________________________________________________
+/**
+* @brief initialize the pwm module
+* @param pin pwm output pin
+* @param frequency generated pwm frequency
+* @param dutyCycle initial duty cycle, later can be changed using updateDutyCycle function
+* @return void
+*/
 void PWM::init(char pin, int frequency, char duty_cycle)
 {
-  //   // pinMode(PWM_PIN, OUTPUT); // Set PWM pin as output
-//   // digitalWrite(PWM_PIN,LOW);
-//   // setupTimer3(PWM_FREQUENCY, DUTY_CYCLE);
-//   // updateDutyCycle(1);
+  pinMode(PWM_PIN, OUTPUT);   // Set PWM pin as output
+  digitalWrite(PWM_PIN,LOW);  // set initial low state, else motor will trigger in full power
+  setupTimer3(PWM_FREQUENCY, DUTY_CYCLE); // setup timer
+  updateDutyCycle(0);                     // no generate pwm, idle
 }
 //__________________________________________________________________________________________________________________________________________________________________
-// void setup2() {
-//   // pinMode(PWM_PIN, OUTPUT); // Set PWM pin as output
-//   // digitalWrite(PWM_PIN,LOW);
-//   // setupTimer3(PWM_FREQUENCY, DUTY_CYCLE);
-//   // updateDutyCycle(1);
-// }
-
-// void loop2() {
-//   // Your main code here (if needed)
-// }
-//__________________________________________________________________________________________________________________________________________________________________
-
-// Function to update duty cycle dynamically
-void updateDutyCycle(int dutyCycle) {
+/**
+ * @brief update duty cycle dynamically
+ * @param dutyCycle to set the duty cycle of pwm 1-100
+ * @return void
+ */
+void PWM::updateDutyCycle(int dutyCycle) 
+{
   int timerCounts = ICR3;
   int dutyCounts = (timerCounts * dutyCycle) / 100;
   OCR3B = dutyCounts; // Update the duty cycle
 }
 //__________________________________________________________________________________________________________________________________________________________________
-
-// Function to set up Timer3 for high-resolution PWM
-void setupTimer3(int frequency, int dutyCycle) {
+/**
+ * @brief Function to set up Timer3 for high-resolution PWM
+ * @param frequency set PWM frequency 
+ * @param dutyCycle set duty cycle
+ * @return void
+ */
+void PWM::setupTimer3(int frequency, int dutyCycle) {
   // Stop Timer3
   TCCR3A = 0;
   TCCR3B = 0;
