@@ -6,7 +6,7 @@ door dr;
 //////////////////////////////////////////////
 void setup() 
 {
-  st.init(13,1000);
+  st.init(23,1000);
   Serial.begin(115200); 
   dr.init();
 }

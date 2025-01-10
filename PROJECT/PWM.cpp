@@ -21,6 +21,26 @@ void PWM::init(char pin, int frequency, char duty_cycle)
 }
 //__________________________________________________________________________________________________________________________________________________________________
 /**
+ * @brief generate PWM with low duty cycle
+ * @param dutyCycle to set the duty cycle of pwm 1-100
+ * @return void
+ */
+void PWM::start(int dutyCycle) 
+{
+   updateDutyCycle(dutyCycle);
+}
+//__________________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief stop PWM generation
+ * @param void
+ * @return void
+ */
+void PWM::stop(void) 
+{
+   updateDutyCycle(0);
+}
+//__________________________________________________________________________________________________________________________________________________________________
+/**
  * @brief update duty cycle dynamically
  * @param dutyCycle to set the duty cycle of pwm 1-100
  * @return void
@@ -58,4 +78,21 @@ void PWM::setupTimer3(int frequency, int dutyCycle) {
   OCR3B = dutyCounts; // Set the duty cycle
 }
 //__________________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief Enable PWM output by starting the timer
+ * @return void
+ */
+void PWM::enable() 
+{
+  TCCR3B |= (1 << CS30); // Set the prescaler to start the timer
+}
 
+//__________________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief Disable PWM output by stopping the timer
+ * @return void
+ */
+void PWM::disable() 
+{
+  TCCR3B &= ~(1 << CS30); // Clear the prescaler bits to stop the timer
+}

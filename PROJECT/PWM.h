@@ -13,9 +13,14 @@ class PWM
   public:
       PWM();
       void init(char pin, int frequency, char duty_cycle);
-      void setupTimer3(int frequency, int dutyCycle);
+      void start(int duty_cycle);
+      void stop(void);
       void updateDutyCycle(int dutyCycle);
+      void enable(void);
+      void disable(void);
   private:
+      void setupTimer3(int frequency, int dutyCycle);
+
 };
 /////////////////////////////////
 #endif

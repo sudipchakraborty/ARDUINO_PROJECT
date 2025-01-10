@@ -5,6 +5,12 @@ StatusBlink::StatusBlink()  // Constructor
 {   
 }
 //__________________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief initialize function
+ * @param pin to set the output
+  * @param speed to set the blink speed
+ * @return void
+ */
 void StatusBlink::init(char pin, unsigned int speed)
 {
     pin_no=pin;
@@ -14,7 +20,27 @@ void StatusBlink::init(char pin, unsigned int speed)
     delay_reg=0;
 }
 //__________________________________________________________________________________________________________________________________________________________________
- void StatusBlink::blink()
+/**
+ * @brief just on the status LED
+ * @param void
+ * @return void
+ */
+void StatusBlink::on(void)
+{
+  digitalWrite(pin_no, HIGH);
+}
+//__________________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief just instant off the LED
+ * @param void
+ * @return void
+ */
+void StatusBlink::off(void)
+{
+  digitalWrite(pin_no, LOW);
+}
+//__________________________________________________________________________________________________________________________________________________________________
+void StatusBlink::blink()
 {
     if(state==true)
     {
