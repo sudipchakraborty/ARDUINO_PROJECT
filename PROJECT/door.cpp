@@ -20,7 +20,7 @@ void door::init(void)
     btn.init(29);
     FSM=FSM_Init;
     Waiting_Count=0;
-    motor.init(2,40000,0);
+    motor.init(2,30000,0);
     count.init();
 }
 //___________________________________________________________________________________________________________________________________________________________
@@ -40,9 +40,9 @@ void door::handle(void)
           Serial.println("Button Pressed");
           bzr.off();
           motor.enable();
-          motor.start(3);
+          motor.start(dc_start);
           FSM=FSM_Initial_Jogg;
-          count.set(1000);
+          count.set(jog_st_count);
      // }
      break;
      ///////////////////
@@ -52,7 +52,15 @@ void door::handle(void)
         Serial.println("Initial Jog Completed..Start Accelerating..");
         count.set(10000);
         accl_count_reg=5;
-        FSM=FSM_Acceleration;
+       // FSM=FSM_Acceleration;
+      }
+      else
+      {
+       // Serial.print("Initial Jog Count=");  Serial.print(count.count_Reg); Serial.print('\r');
+        Serial.print("\rProgress: "); // Return to the beginning of the line
+    Serial.print(count.count_Reg); // Print the current progress value
+    Serial.print("%"); // Add a percentage symbol
+    delay(100); // Wait for 100 milliseconds
       }
    break;
      ///////////////////
@@ -95,6 +103,7 @@ void door::handle(void)
         if(decl_count_reg<10)
         {
           Serial.print("Deceleration Completed. Going to Final jog..");
+          motor.disable();
           jog_count_reg=0;
           FSM=FSM_Final_Jogg;
         }
