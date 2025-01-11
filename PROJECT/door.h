@@ -9,11 +9,14 @@ class door
     void handle(void);
     ////////////////////////
     private:
+    bool JoG_Completed(unsigned int val_inc, unsigned int val_cmp);
     char FSM;
     int  Waiting_Count;
     long accl_count_reg;
     long jog_count_reg;
-    long decl_count_reg;
+    long temp;
+    int TestCount;
+    char door_Activity;
 };
 
 
@@ -31,9 +34,18 @@ enum FSM
   FSM_Waiting_For_Full_Close
 };
 ///////////////////////////////////////
-#define dc_start   3  
-#define jog_st_count  10000
+#define  Tick  1000
+#define dc_start   5 
+#define  motor_start_jog    250 
+#define during_accl_count  5000
+#define jog_duration      500
 
+#define PIN_DIR   33
+#define Dir_Open  1
+#define Dir_Close 0
+
+#define Door_Opening   1
+#define Door_Closing   2
 
 
 //___________________________________________________________________________________________________________________________________________________________

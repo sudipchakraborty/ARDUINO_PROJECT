@@ -16,64 +16,88 @@ door::door()
 //___________________________________________________________________________________________________________________________________________________________
 void door::init(void)
 {
+    pinMode(PIN_DIR, OUTPUT);
+    TestCount=0;
     bzr.init(31);
     btn.init(29);
     FSM=FSM_Init;
     Waiting_Count=0;
     motor.init(2,30000,0);
-    count.init();
+    count.init();  
 }
 //___________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief initialize function
+ * @param   to set the output
+  * @param   to set the blink speed
+ * @return void
+ */
 void door::handle(void)
 {
     switch(FSM)
   {
     case FSM_Init:   
-      FSM=FSM_Wait_For_Trigger;
+    if(btn.pressed())
+      {
+        Waiting_Count=0;
+        bzr.beep();
+        delay(1000);
+        door_Activity=Door_Opening;
+        FSM=FSM_Wait_For_Trigger;
+      }  
+      else
+      {
+          Serial3.print("\rWaiting for Trigger to Open The door..."); Serial3.print(Waiting_Count);
+          Waiting_Count++;
+          delay(100);
+      }   
     break;
     //////////////////
      case FSM_Wait_For_Trigger:
-      // if(btn.pressed())
-      // {
-          bzr.beep();
-          delay(1000);
-          Serial.println("Button Pressed");
+      
+        if(door_Activity==Door_Opening) 
+        {
+          Serial3.println("Door is Opening Now....");
+          digitalWrite(PIN_DIR, Dir_Open);
+        }
+        else 
+        {
+          Serial3.println("Door is Closing Now....");
+          digitalWrite(PIN_DIR, Dir_Close);
+        }
+      
+
+
+          Serial3.print("\n\r============================<TEST COUNT="); Serial3.print(TestCount); Serial3.println(">=====================================");
+          Serial3.println("Button Pressed");
           bzr.off();
           motor.enable();
           motor.start(dc_start);
           FSM=FSM_Initial_Jogg;
-          count.set(jog_st_count);
-     // }
+          count.set(Tick);
+          temp=0;
+
      break;
      ///////////////////
    case FSM_Initial_Jogg:
-      if(count.over())
+    if(JoG_Completed(temp, motor_start_jog))
       {
-        Serial.println("Initial Jog Completed..Start Accelerating..");
-        count.set(10000);
-        accl_count_reg=5;
-       // FSM=FSM_Acceleration;
-      }
-      else
-      {
-       // Serial.print("Initial Jog Count=");  Serial.print(count.count_Reg); Serial.print('\r');
-        Serial.print("\rProgress: "); // Return to the beginning of the line
-    Serial.print(count.count_Reg); // Print the current progress value
-    Serial.print("%"); // Add a percentage symbol
-    delay(100); // Wait for 100 milliseconds
-      }
+        Serial3.println("\r\nInitial Jog Completed..Start Accelerating..");
+        accl_count_reg=5;count.set(10000);FSM=FSM_Acceleration;    
+      }  
    break;
      ///////////////////
    case FSM_Acceleration:
      if(count.over())
       {
         accl_count_reg++;
-        Serial.print("accl_count_reg=");Serial.println(accl_count_reg);
+        Serial3.print("\raccl_count_reg=");Serial3.print(accl_count_reg);
         motor.updateDutyCycle(accl_count_reg);
-        if(accl_count_reg>=20)
+        if(accl_count_reg>=30)
         {
           jog_count_reg=0;
-          Serial.print("Acceleration Completed. Going to Jog Phase..");
+          count.set(Tick);
+          Serial3.println("\r\nAcceleration Completed. Going to Jog Phase..");
           FSM=FSM_Jog;
         }
       }
@@ -84,11 +108,11 @@ void door::handle(void)
    if(count.over())
       {
         jog_count_reg++;   
-        Serial.print("Jog Count=");Serial.println(jog_count_reg);  
-        if(jog_count_reg>=40)
+        Serial3.print("\rJog Count=");Serial3.print(jog_count_reg);  
+        if(jog_count_reg>=jog_duration)
         {
-          Serial.print("Jog Completed. Going to deceleration..");
-          decl_count_reg=50;
+          Serial3.println("\r\nJog Completed. Going to deceleration..");
+          count.set(10000);
           FSM=FSM_Deceleration;
         }
       }
@@ -97,14 +121,14 @@ void door::handle(void)
    case FSM_Deceleration:
     if(count.over())
       {
-        decl_count_reg--;
-        Serial.print("decl_count_reg=");Serial.println(decl_count_reg);  
-        motor.updateDutyCycle(decl_count_reg);
-        if(decl_count_reg<10)
+        accl_count_reg--;
+        Serial3.print("\rdecl_count_reg=");Serial3.print(accl_count_reg);  
+        motor.updateDutyCycle(accl_count_reg);
+        if(accl_count_reg<10)
         {
-          Serial.print("Deceleration Completed. Going to Final jog..");
-          motor.disable();
+          Serial3.println("\r\nDeceleration Completed. Waiting for Sensor..");
           jog_count_reg=0;
+          count.set(Tick);
           FSM=FSM_Final_Jogg;
         }
       }
@@ -115,45 +139,68 @@ void door::handle(void)
       {
         if(jog_count_reg>=100)
         {
-          Serial.print("Final Jog Completed. Going to Motor Stop");
-          jog_count_reg=0;
+          Serial3.print("\r\nFinal Jog Completed. Going to Motor Stop");
+          motor.updateDutyCycle(0);
+          delay(10);
           motor.disable();
-          delay(3000);
-          FSM=FSM_Wait_For_Trigger;
-          Serial.print("Motor Stopped. Going Back..");
+
+          if(door_Activity==Door_Opening)
+          {
+            delay(10000);
+            FSM=FSM_Wait_For_Trigger;
+            Serial3.println("Motor Stopped. Going Back..");
+            TestCount++;
+            door_Activity=Door_Closing;
+          }
+          else
+          {
+              FSM=FSM_Init;
+          }
+
+          
+        }
+        else
+        {
+          jog_count_reg++;
+          Serial3.print("\rFinal Jog. Waiting for sensor=");Serial3.print(jog_count_reg);  
         }
       }
 
-   break;
-     ///////////////////
-
- 
-
-    // case FSM_Read_Motion_Sensor:
-
-    // Serial.print("Waiting for Motion Sensor Trigger>");Serial.println(Waiting_Count);
-    // FSM=FSM_Read_button;
-    // break;
-    // /////////////////
-    // case FSM_Read_Initial_Sensor:
-    
-    // break;
-    ////////////////
-    case FSM_Waiting_For_Terminal_Trigger:
-    
     break;
-    ////////////////
-    case FSM_Waiting_Door_Clear:
-    
-    break;
-    ////////////////
-    case FSM_Waiting_For_Full_Close:
-
-    break;
-    ////////////////
+    ////////////////////////
     defult:
     break;
   } 
-    Waiting_Count++;
 }
 //___________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief Jog function
+ * @param  val_inc increment value
+ * @param  val_cmp compare value
+ * @return true if jog completed, else false
+ */
+bool door::JoG_Completed(unsigned int val_inc, unsigned int val_cmp)
+{
+  if(count.over())
+  {
+      if(val_inc>=val_cmp)
+      {
+        Serial3.println("\r\nJog Completed");
+        return true;
+      }
+      else
+      {
+        temp++;
+        Serial3.print("\rJog Count=");  Serial3.print(temp);
+        return false;
+      }
+  }
+  else
+  {
+      return false;
+  }
+}
+//___________________________________________________________________________________________________________________________________________________________
+
+
+
