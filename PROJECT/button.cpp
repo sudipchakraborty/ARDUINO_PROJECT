@@ -8,7 +8,7 @@ button::button()  // Constructor
 void button::init(char pin)
 {
     sw_pin=pin;
-    pinMode(pin, INPUT);
+    pinMode(pin, INPUT_PULLUP);
 }
 //__________________________________________________________________________________________________________________________________________________________________
  bool button::pressed()

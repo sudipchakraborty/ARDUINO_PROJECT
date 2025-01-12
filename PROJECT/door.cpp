@@ -5,10 +5,40 @@
 #include "PWM.h"
 #include "virtualCounter.h"
 ///////////////////////
-button btn;
+button btn_trig;
+button btn_home;
 buzzer bzr;
 PWM motor;
 virtualCounter count;
+
+#define SWITCH1_PIN 3   // Switch 1 connected to pin 3
+#define SWITCH2_PIN 19  // Switch 2 connected to pin 19
+#define SWITCH3_PIN 20  // Switch 3 connected to pin 20
+
+volatile bool switch1State = false; // State of Switch 1
+volatile bool switch2State = false; // State of Switch 2
+volatile bool switch3State = false; // State of Switch 3
+
+
+void switch1ISR() {
+  // Toggle the state of switch 1
+  switch1State = !switch1State;
+  Serial3.println("Switch 1 Toggled: " + String(switch1State));
+}
+
+void switch2ISR() {
+  // Toggle the state of switch 2
+  switch2State = !switch2State;
+  Serial3.println("Switch 2 Toggled: " + String(switch2State));
+}
+
+void switch3ISR() {
+  // Toggle the state of switch 3
+  switch3State = !switch3State;
+  Serial3.println("Switch 3 Toggled: " + String(switch3State));
+}
+
+
 //___________________________________________________________________________________________________________________________________________________________
 door::door()
 {
@@ -19,11 +49,20 @@ void door::init(void)
     pinMode(PIN_DIR, OUTPUT);
     TestCount=0;
     bzr.init(31);
-    btn.init(29);
+    btn_trig.init(29);
+    btn_home.init(4);
     FSM=FSM_Init;
     Waiting_Count=0;
     motor.init(2,30000,0);
     count.init();  
+    
+    pinMode(SWITCH1_PIN, INPUT_PULLUP);
+    pinMode(SWITCH2_PIN, INPUT_PULLUP);
+    pinMode(SWITCH3_PIN, INPUT_PULLUP);
+     // Attach interrupts for the switches
+    attachInterrupt(digitalPinToInterrupt(SWITCH1_PIN), switch1ISR, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(SWITCH2_PIN), switch2ISR, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(SWITCH3_PIN), switch3ISR, CHANGE);
 }
 //___________________________________________________________________________________________________________________________________________________________
 /**
@@ -34,10 +73,26 @@ void door::init(void)
  */
 void door::handle(void)
 {
+  if(btn_home.pressed())
+  {
+    Serial3.println(" Home button pressed..");
+    delay(2000);
+  }
+
+    if(btn_trig.pressed())
+  {
+    Serial3.println(" Triggered button pressed..");
+     delay(2000);
+  }
+
+
+  return;
+
+
     switch(FSM)
   {
     case FSM_Init:   
-    if(btn.pressed())
+    if(btn_trig.pressed())
       {
         Waiting_Count=0;
         bzr.beep();
