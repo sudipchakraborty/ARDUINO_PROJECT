@@ -10,6 +10,7 @@ class door
     ////////////////////////
     private:
     bool JoG_Completed(unsigned int val_inc, unsigned int val_cmp);
+    void setUpTimer1(long milliseconds);
     char FSM;
     int  Waiting_Count;
     long accl_count_reg;

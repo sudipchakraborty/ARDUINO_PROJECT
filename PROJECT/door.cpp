@@ -4,12 +4,14 @@
 #include "buzzer.h"
 #include "PWM.h"
 #include "virtualCounter.h"
+#include "timer1.h"
 ///////////////////////
 button btn_trig;
 button btn_home;
 buzzer bzr;
 PWM motor;
 virtualCounter count;
+extern timer1 t1;
 
 #define SWITCH1_PIN 3   // Switch 1 connected to pin 3
 #define SWITCH2_PIN 19  // Switch 2 connected to pin 19
@@ -63,6 +65,9 @@ void door::init(void)
     attachInterrupt(digitalPinToInterrupt(SWITCH1_PIN), switch1ISR, CHANGE);
     attachInterrupt(digitalPinToInterrupt(SWITCH2_PIN), switch2ISR, CHANGE);
     attachInterrupt(digitalPinToInterrupt(SWITCH3_PIN), switch3ISR, CHANGE);
+
+    t1.init(10);
+    t1.setInterval(5);
 }
 //___________________________________________________________________________________________________________________________________________________________
 /**
@@ -85,11 +90,7 @@ void door::handle(void)
      delay(2000);
   }
 
-
-  return;
-
-
-    switch(FSM)
+  switch(FSM)
   {
     case FSM_Init:   
     if(btn_trig.pressed())
@@ -121,29 +122,29 @@ void door::handle(void)
           digitalWrite(PIN_DIR, Dir_Close);
         }
       
-
-
           Serial3.print("\n\r============================<TEST COUNT="); Serial3.print(TestCount); Serial3.println(">=====================================");
           Serial3.println("Button Pressed");
           bzr.off();
           motor.enable();
           motor.start(dc_start);
           FSM=FSM_Initial_Jogg;
-          count.set(Tick);
+          t1.setInterval(100);
           temp=0;
 
      break;
      ///////////////////
    case FSM_Initial_Jogg:
-    if(JoG_Completed(temp, motor_start_jog))
+    if(t1.completed)
       {
         Serial3.println("\r\nInitial Jog Completed..Start Accelerating..");
-        accl_count_reg=5;count.set(10000);FSM=FSM_Acceleration;    
+        accl_count_reg=5;
+        t1.setInterval(1000);
+        FSM=FSM_Acceleration;    
       }  
    break;
      ///////////////////
    case FSM_Acceleration:
-     if(count.over())
+     if(t1.completed)
       {
         accl_count_reg++;
         Serial3.print("\raccl_count_reg=");Serial3.print(accl_count_reg);
@@ -151,7 +152,7 @@ void door::handle(void)
         if(accl_count_reg>=30)
         {
           jog_count_reg=0;
-          count.set(Tick);
+          t1.setInterval(100);
           Serial3.println("\r\nAcceleration Completed. Going to Jog Phase..");
           FSM=FSM_Jog;
         }
@@ -160,21 +161,21 @@ void door::handle(void)
    break;
      ///////////////////
    case FSM_Jog:
-   if(count.over())
+   if(t1.completed)
       {
         jog_count_reg++;   
         Serial3.print("\rJog Count=");Serial3.print(jog_count_reg);  
         if(jog_count_reg>=jog_duration)
         {
           Serial3.println("\r\nJog Completed. Going to deceleration..");
-          count.set(10000);
+          t1.setInterval(1000);
           FSM=FSM_Deceleration;
         }
       }
    break;
      ///////////////////
    case FSM_Deceleration:
-    if(count.over())
+    if(t1.completed)
       {
         accl_count_reg--;
         Serial3.print("\rdecl_count_reg=");Serial3.print(accl_count_reg);  
@@ -183,14 +184,14 @@ void door::handle(void)
         {
           Serial3.println("\r\nDeceleration Completed. Waiting for Sensor..");
           jog_count_reg=0;
-          count.set(Tick);
+          t1.setInterval(100);
           FSM=FSM_Final_Jogg;
         }
       }
    break;
      ///////////////////
    case FSM_Final_Jogg:
-      if(count.over())
+      if(t1.completed)
       {
         if(jog_count_reg>=100)
         {
@@ -255,7 +256,4 @@ bool door::JoG_Completed(unsigned int val_inc, unsigned int val_cmp)
       return false;
   }
 }
-//___________________________________________________________________________________________________________________________________________________________
-
-
-
+//___________________________________________________________________________________________________________________________________________________________________________________
