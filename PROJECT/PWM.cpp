@@ -12,7 +12,7 @@ PWM::PWM()  // // Constructor
 * @param dutyCycle initial duty cycle, later can be changed using updateDutyCycle function
 * @return void
 */
-void PWM::init(char pin, int frequency, char duty_cycle)
+void PWM::init(char pin, int frequency)
 {
   pinMode(PWM_PIN, OUTPUT);   // Set PWM pin as output
   digitalWrite(PWM_PIN,LOW);  // set initial low state, else motor will trigger in full power

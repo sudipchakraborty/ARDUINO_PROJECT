@@ -7,6 +7,11 @@ class door
     door();
     void init(void);
     void handle(void);
+    void set_door_open(void);
+    void set_door_close(void);
+    bool door_not_closed(void);
+    bool door_closed(void);
+    bool door_opened(void);
     ////////////////////////
     private:
     bool JoG_Completed(unsigned int val_inc, unsigned int val_cmp);
@@ -18,12 +23,17 @@ class door
     long temp;
     int TestCount;
     char door_Activity;
+
 };
 
 
 enum FSM
 {
   FSM_Init,
+  FSM_check_door_open,
+  FSM_Wait_For_Full_Close,
+  FSM_Wait_For_Open_Sensor_trigger,
+  FSM_Wait_For_Close_Sensor_Trigger,
   FSM_Wait_For_Trigger,
   FSM_Initial_Jogg,
   FSM_Acceleration,
@@ -42,13 +52,14 @@ enum FSM
 #define jog_duration      500
 
 #define PIN_DIR   33
-#define Dir_Open  1
-#define Dir_Close 0
+#define Dir_Open  0
+#define Dir_Close 1
 
 #define Door_Opening   1
 #define Door_Closing   2
 
-
+#define open  1
+#define close 2
 //___________________________________________________________________________________________________________________________________________________________
  #endif
 

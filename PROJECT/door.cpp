@@ -13,34 +13,35 @@ PWM motor;
 virtualCounter count;
 extern timer1 t1;
 
-#define SWITCH1_PIN 3   // Switch 1 connected to pin 3
-#define SWITCH2_PIN 19  // Switch 2 connected to pin 19
-#define SWITCH3_PIN 20  // Switch 3 connected to pin 20
 
-volatile bool switch1State = false; // State of Switch 1
-volatile bool switch2State = false; // State of Switch 2
-volatile bool switch3State = false; // State of Switch 3
+int state_count=0;
 
+#define Emergency_SW_PIN 3   // Switch 1 connected to pin 3
+#define Close_Sensor_PIN 19  // Switch 2 connected to pin 19
+#define Open_Sensor_PIN 20  // Switch 3 connected to pin 20
 
-void switch1ISR() {
-  // Toggle the state of switch 1
-  switch1State = !switch1State;
-  Serial3.println("Switch 1 Toggled: " + String(switch1State));
+volatile bool Emergency_SW= false; // State of Switch 1
+volatile bool Close_Sensor= false; // State of Switch 2
+volatile bool Open_Sensor= false; // State of Switch 3
+volatile  char SensorTrigger=false;
+/////////////////////////////////////
+void EmergencySwISR() 
+{
+  Serial3.println("Emergency Switch ");
 }
-
-void switch2ISR() {
-  // Toggle the state of switch 2
-  switch2State = !switch2State;
-  Serial3.println("Switch 2 Toggled: " + String(switch2State));
+////////////////////////////////
+void CloseSensorISR() 
+{
+  motor.updateDutyCycle(0);
+  SensorTrigger=close;
+  cli(); // Disable all interrupts globally
 }
-
-void switch3ISR() {
-  // Toggle the state of switch 3
-  switch3State = !switch3State;
-  Serial3.println("Switch 3 Toggled: " + String(switch3State));
+///////////////////////////////
+void OpenSensorISR() 
+{ 
+  motor.updateDutyCycle(0);
+  SensorTrigger=open;
 }
-
-
 //___________________________________________________________________________________________________________________________________________________________
 door::door()
 {
@@ -55,18 +56,20 @@ void door::init(void)
     btn_home.init(4);
     FSM=FSM_Init;
     Waiting_Count=0;
-    motor.init(2,30000,0);
-    count.init();  
-    
-    pinMode(SWITCH1_PIN, INPUT_PULLUP);
-    pinMode(SWITCH2_PIN, INPUT_PULLUP);
-    pinMode(SWITCH3_PIN, INPUT_PULLUP);
-     // Attach interrupts for the switches
-    attachInterrupt(digitalPinToInterrupt(SWITCH1_PIN), switch1ISR, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(SWITCH2_PIN), switch2ISR, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(SWITCH3_PIN), switch3ISR, CHANGE);
+    motor.init(2,30000);
+    motor.disable();
+    count.init(); 
+     
+    pinMode(Emergency_SW_PIN, INPUT_PULLUP);
+    pinMode(Close_Sensor_PIN, INPUT_PULLUP);
+    pinMode(Open_Sensor_PIN, INPUT_PULLUP);
 
-    t1.init(10);
+     // Attach interrupts for the switches
+    // attachInterrupt(digitalPinToInterrupt(Emergency_SW_PIN), EmergencySwISR,LOW);
+    // attachInterrupt(digitalPinToInterrupt(Close_Sensor_PIN), CloseSensorISR, LOW);
+    // attachInterrupt(digitalPinToInterrupt(Open_Sensor_PIN), OpenSensorISR, LOW);
+
+    t1.init(25);
     t1.setInterval(5);
 }
 //___________________________________________________________________________________________________________________________________________________________
@@ -78,59 +81,65 @@ void door::init(void)
  */
 void door::handle(void)
 {
-  if(btn_home.pressed())
-  {
-    Serial3.println(" Home button pressed..");
-    delay(2000);
-  }
-
-    if(btn_trig.pressed())
-  {
-    Serial3.println(" Triggered button pressed..");
-     delay(2000);
-  }
-
+  ////////////////////////////////////
   switch(FSM)
   {
     case FSM_Init:   
-    if(btn_trig.pressed())
-      {
-        Waiting_Count=0;
-        bzr.beep();
-        delay(1000);
-        door_Activity=Door_Opening;
-        FSM=FSM_Wait_For_Trigger;
-      }  
-      else
-      {
-          Serial3.print("\rWaiting for Trigger to Open The door..."); Serial3.print(Waiting_Count);
-          Waiting_Count++;
-          delay(100);
-      }   
+      Serial3.println(" FSM state: FSM_Init.."); 
+      FSM=FSM_check_door_open;
     break;
     //////////////////
-     case FSM_Wait_For_Trigger:
-      
-        if(door_Activity==Door_Opening) 
-        {
-          Serial3.println("Door is Opening Now....");
-          digitalWrite(PIN_DIR, Dir_Open);
-        }
-        else 
-        {
-          Serial3.println("Door is Closing Now....");
-          digitalWrite(PIN_DIR, Dir_Close);
-        }
-      
-          Serial3.print("\n\r============================<TEST COUNT="); Serial3.print(TestCount); Serial3.println(">=====================================");
-          Serial3.println("Button Pressed");
-          bzr.off();
-          motor.enable();
-          motor.start(dc_start);
-          FSM=FSM_Initial_Jogg;
-          t1.setInterval(100);
-          temp=0;
+    case FSM_check_door_open:
 
+      if(door_not_closed())
+      {
+         Serial3.println("door_not_closed");
+         delay(1000);
+         set_door_close();
+         Serial3.println(" Set Motor Direction is to be closed");
+         motor.updateDutyCycle(5);
+         motor.enable();
+         FSM=FSM_Wait_For_Full_Close;
+      }
+      else
+      {
+         Serial3.println("door closed");
+      }
+      return;
+
+    break;
+    ///////////////////
+    case FSM_Wait_For_Full_Close:
+
+    if(door_closed())
+    {
+       motor.updateDutyCycle(0);
+       Serial3.println("\rdoor closed Now. Waiting for Trigger to open the door..");
+       FSM=FSM_Wait_For_Trigger;
+    }
+    else
+    {
+      Serial3.print("\rWaiting for door close="); Serial3.print(state_count);state_count++;
+    }
+    break;
+    ///////////////////////////////
+     case FSM_Wait_For_Trigger:
+
+      if(btn_trig.pressed())
+      {
+            Serial3.println("Button Pressed");
+            Serial3.println("Door is Opening Now....");
+            set_door_open();
+            Serial3.println("Going for intitial Jog..");
+            FSM=FSM_Initial_Jogg;
+            door_Activity=Door_Opening;
+            t1.setInterval(100);
+            motor.updateDutyCycle(5);
+      }
+      else
+      {
+        Serial3.print("\rFSM_Wait_For_Trigger="); Serial3.print(state_count);state_count++;
+      }
      break;
      ///////////////////
    case FSM_Initial_Jogg:
@@ -138,7 +147,7 @@ void door::handle(void)
       {
         Serial3.println("\r\nInitial Jog Completed..Start Accelerating..");
         accl_count_reg=5;
-        t1.setInterval(1000);
+        t1.setInterval(5);
         FSM=FSM_Acceleration;    
       }  
    break;
@@ -146,13 +155,13 @@ void door::handle(void)
    case FSM_Acceleration:
      if(t1.completed)
       {
+        t1.reset();
         accl_count_reg++;
-        Serial3.print("\raccl_count_reg=");Serial3.print(accl_count_reg);
+        Serial3.print("accl_count_reg=");Serial3.println(accl_count_reg);
         motor.updateDutyCycle(accl_count_reg);
         if(accl_count_reg>=30)
         {
           jog_count_reg=0;
-          t1.setInterval(100);
           Serial3.println("\r\nAcceleration Completed. Going to Jog Phase..");
           FSM=FSM_Jog;
         }
@@ -163,12 +172,12 @@ void door::handle(void)
    case FSM_Jog:
    if(t1.completed)
       {
+        t1.reset();
         jog_count_reg++;   
         Serial3.print("\rJog Count=");Serial3.print(jog_count_reg);  
-        if(jog_count_reg>=jog_duration)
+        if(jog_count_reg>=25)
         {
           Serial3.println("\r\nJog Completed. Going to deceleration..");
-          t1.setInterval(1000);
           FSM=FSM_Deceleration;
         }
       }
@@ -177,6 +186,7 @@ void door::handle(void)
    case FSM_Deceleration:
     if(t1.completed)
       {
+        t1.reset();
         accl_count_reg--;
         Serial3.print("\rdecl_count_reg=");Serial3.print(accl_count_reg);  
         motor.updateDutyCycle(accl_count_reg);
@@ -184,44 +194,50 @@ void door::handle(void)
         {
           Serial3.println("\r\nDeceleration Completed. Waiting for Sensor..");
           jog_count_reg=0;
-          t1.setInterval(100);
           FSM=FSM_Final_Jogg;
+          SensorTrigger=false;
         }
       }
    break;
      ///////////////////
    case FSM_Final_Jogg:
+
       if(t1.completed)
       {
-        if(jog_count_reg>=100)
-        {
-          Serial3.print("\r\nFinal Jog Completed. Going to Motor Stop");
-          motor.updateDutyCycle(0);
-          delay(10);
-          motor.disable();
+          t1.reset();
+          jog_count_reg++;
+          Serial3.print("\rFinal Jog. Waiting for sensor=");Serial3.print(jog_count_reg);  
 
           if(door_Activity==Door_Opening)
           {
-            delay(10000);
-            FSM=FSM_Wait_For_Trigger;
-            Serial3.println("Motor Stopped. Going Back..");
-            TestCount++;
-            door_Activity=Door_Closing;
+            if(door_opened())
+            {
+              motor.updateDutyCycle(0);
+              Serial3.print("\r\n Open Sensor Triggered. Motor Stopped");
+              delay(5000);         
+              TestCount++;
+              door_Activity=Door_Closing;   
+    
+              Serial3.println("Door is closing Now....");
+              set_door_close();
+              Serial3.println("Going for intitial Jog..");
+              t1.setInterval(100);
+              motor.updateDutyCycle(5);
+              FSM=FSM_Initial_Jogg;
+            }
           }
-          else
+          else if(door_Activity==Door_Closing)
           {
-              FSM=FSM_Init;
+            if(door_closed())
+            {
+              motor.updateDutyCycle(0);
+              Serial3.print("\r\n close Sensor Triggered. Motor Stopped");
+              delay(50);         
+              TestCount++;       
+              FSM=FSM_Wait_For_Trigger;
+            }
           }
-
-          
-        }
-        else
-        {
-          jog_count_reg++;
-          Serial3.print("\rFinal Jog. Waiting for sensor=");Serial3.print(jog_count_reg);  
-        }
       }
-
     break;
     ////////////////////////
     defult:
@@ -257,3 +273,46 @@ bool door::JoG_Completed(unsigned int val_inc, unsigned int val_cmp)
   }
 }
 //___________________________________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief set motor direction bit as door open
+ * @param  void
+ * @param  void
+ * @return void
+ */
+void door::set_door_open(void)
+{
+  digitalWrite(PIN_DIR, Dir_Open);
+}
+//___________________________________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief set motor direction bit as door close
+ * @param  void
+ * @param  void
+ * @return void
+ */
+void door::set_door_close(void)
+{
+  digitalWrite(PIN_DIR, Dir_Close);
+}
+//___________________________________________________________________________________________________________________________________________________________________________________
+ bool door:: door_not_closed(void)
+ {
+    bool st=digitalRead(Close_Sensor_PIN);
+    if(st !=0) return true;
+    else return false;
+ } 
+ //___________________________________________________________________________________________________________________________________________________________________________________
+ bool door:: door_closed(void)
+ {
+    bool st=digitalRead(Close_Sensor_PIN);
+    if(st ==0) return true;
+    else return false;
+ } 
+ //___________________________________________________________________________________________________________________________________________________________________________________
+ bool door:: door_opened(void)
+ {
+    bool st=digitalRead(Open_Sensor_PIN);
+    if(st ==0) return true;
+    else return false;
+ } 
+ //___________________________________________________________________________________________________________________________________________________________________________________

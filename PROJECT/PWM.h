@@ -12,7 +12,7 @@ class PWM
 {
   public:
       PWM();
-      void init(char pin, int frequency, char duty_cycle);
+      void init(char pin, int frequency);
       void start(int duty_cycle);
       void stop(void);
       void updateDutyCycle(int dutyCycle);
