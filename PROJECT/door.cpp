@@ -13,7 +13,6 @@ PWM motor;
 virtualCounter count;
 extern timer1 t1;
 
-
 int state_count=0;
 
 #define Emergency_SW_PIN 3   // Switch 1 connected to pin 3
@@ -84,9 +83,10 @@ void door::handle(void)
   ////////////////////////////////////
   switch(FSM)
   {
-    case FSM_Init:   
-      Serial3.println(" FSM state: FSM_Init.."); 
-      FSM=FSM_check_door_open;
+    case FSM_Init:  
+    PrintSensorStatus(); 
+      // Serial3.println(" FSM state: FSM_Init.."); 
+      // FSM=FSM_check_door_open;
     break;
     //////////////////
     case FSM_check_door_open:
@@ -97,7 +97,7 @@ void door::handle(void)
          delay(1000);
          set_door_close();
          Serial3.println(" Set Motor Direction is to be closed");
-         motor.updateDutyCycle(5);
+         motor.updateDutyCycle(10);
          motor.enable();
          FSM=FSM_Wait_For_Full_Close;
       }
@@ -159,7 +159,7 @@ void door::handle(void)
         accl_count_reg++;
         Serial3.print("accl_count_reg=");Serial3.println(accl_count_reg);
         motor.updateDutyCycle(accl_count_reg);
-        if(accl_count_reg>=30)
+        if(accl_count_reg>=20)
         {
           jog_count_reg=0;
           Serial3.println("\r\nAcceleration Completed. Going to Jog Phase..");
@@ -175,7 +175,7 @@ void door::handle(void)
         t1.reset();
         jog_count_reg++;   
         Serial3.print("\rJog Count=");Serial3.print(jog_count_reg);  
-        if(jog_count_reg>=25)
+        if(jog_count_reg>=10)
         {
           Serial3.println("\r\nJog Completed. Going to deceleration..");
           FSM=FSM_Deceleration;
@@ -315,4 +315,14 @@ void door::set_door_close(void)
     if(st ==0) return true;
     else return false;
  } 
- //___________________________________________________________________________________________________________________________________________________________________________________
+ //__________________________________________________________________________________________________________________________________________________________________________________
+void door::PrintSensorStatus(void)
+{
+    bool cs=digitalRead(Close_Sensor_PIN);
+    Serial3.print("\rCLOSE SENSOR STATUS="); 
+    if(cs==0) Serial3.println("CLOSED"); else  Serial3.println("OPEN");
+
+   // bool os=digitalRead(Open_Sensor_PIN);
+ 
+}
+//__________________________________________________________________________________________________________________________________________________________________________________

@@ -12,6 +12,7 @@ class door
     bool door_not_closed(void);
     bool door_closed(void);
     bool door_opened(void);
+    void PrintSensorStatus(void);
     ////////////////////////
     private:
     bool JoG_Completed(unsigned int val_inc, unsigned int val_cmp);
@@ -52,8 +53,8 @@ enum FSM
 #define jog_duration      500
 
 #define PIN_DIR   33
-#define Dir_Open  0
-#define Dir_Close 1
+#define Dir_Open  1
+#define Dir_Close 0
 
 #define Door_Opening   1
 #define Door_Closing   2
