@@ -84,12 +84,15 @@ void door::handle(void)
   switch(FSM)
   {
     case FSM_Init:  
-    PrintSensorStatus(); 
+    test_open();
+    // test_close();
+    // PrintSensorStatus(); 
       // Serial3.println(" FSM state: FSM_Init.."); 
-      // FSM=FSM_check_door_open;
+      FSM=FSM_check_door_open;
     break;
     //////////////////
     case FSM_check_door_open:
+    return;
 
       if(door_not_closed())
       {
@@ -319,10 +322,43 @@ void door::set_door_close(void)
 void door::PrintSensorStatus(void)
 {
     bool cs=digitalRead(Close_Sensor_PIN);
-    Serial3.print("\rCLOSE SENSOR STATUS="); 
-    if(cs==0) Serial3.println("CLOSED"); else  Serial3.println("OPEN");
+    Serial.print("\rCLOSE SENSOR STATUS="); 
+    if(cs==0) Serial.println("CLOSED"); else  Serial.println("OPEN");
 
    // bool os=digitalRead(Open_Sensor_PIN);
  
 }
 //__________________________________________________________________________________________________________________________________________________________________________________
+void door::test_close(void)
+{
+   set_door_close();
+   t1.setInterval(10);
+   motor.updateDutyCycle(20);
+   motor.enable();
+
+   delay(45000);
+   motor.updateDutyCycle(0);
+}
+//__________________________________________________________________________________________________________________________________________________________________________________
+void door::test_open(void)
+{
+   set_door_open();
+   t1.setInterval(10);
+   motor.updateDutyCycle(20);
+   motor.enable();
+
+   delay(40000);
+   motor.updateDutyCycle(0);
+}
+
+
+
+
+
+
+
+
+
+
+
+
