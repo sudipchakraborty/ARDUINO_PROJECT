@@ -21,8 +21,8 @@ void loop()
   if(cmd.available()) {
     dr.action_for_command(cmd.parsedParts);
     }
-  // st.blink();
-  // dr.handle();
+  st.blink();
+  dr.handle();
 }
 ///////////////////////////////////////////////
 

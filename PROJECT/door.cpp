@@ -84,11 +84,11 @@ void door::handle(void)
   switch(FSM)
   {
     case FSM_Init:  
-    test_open();
+    // test_open(1000);
     // test_close();
     // PrintSensorStatus(); 
       // Serial3.println(" FSM state: FSM_Init.."); 
-      FSM=FSM_check_door_open;
+      // FSM=FSM_check_door_open;
     break;
     //////////////////
     case FSM_check_door_open:
@@ -359,14 +359,14 @@ void door::PrintSensorStatus(void)
  * @param  void
  * @return void
  */
-void door::test_close(void)
+void door::test_close(unsigned int duration)
 {
    set_door_close();
    t1.setInterval(10);
    motor.updateDutyCycle(20);
    motor.enable();
 
-   delay(45000);
+   delay(duration);
    motor.updateDutyCycle(0);
 }
 //__________________________________________________________________________________________________________________________________________________________________________________
@@ -376,14 +376,14 @@ void door::test_close(void)
  * @param  void
  * @return void
  */
-void door::test_open(void)
+void door::test_open(unsigned int duration)
 {
    set_door_open();
    t1.setInterval(10);
    motor.updateDutyCycle(20);
    motor.enable();
 
-   delay(40000);
+   delay(duration);
    motor.updateDutyCycle(0);
 }
 //__________________________________________________________________________________________________________________________________________________________________________________
@@ -405,6 +405,29 @@ void door::action_for_command(String *cmd)
     Serial.println(String(intValue));
   }
   /////////////////////////
+   if(s=="o") // forward
+  {
+    String dist= *(cmd+1); 
+    int intValue = dist.toInt(); 
+    Serial.print("Door Opening upto=");
+    Serial.println(String(intValue));
+    test_open(intValue);
+  }
+  /////////////////////////
+    if(s=="c") // forward
+  {
+    String dist= *(cmd+1); 
+    int intValue = dist.toInt(); 
+    Serial.print("Door Opening upto=");
+    Serial.println(String(intValue));
+    test_close(intValue);
+  }
+  /////////////////////////
+
+
+
+
+
   if(s=="r") // forward
   {
 

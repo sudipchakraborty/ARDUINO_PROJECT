@@ -14,8 +14,8 @@ class door
     bool door_closed(void);
     bool door_opened(void);
     void PrintSensorStatus(void);
-    void test_open(void);
-    void test_close(void);
+    void test_open(unsigned int duration);
+    void test_close(unsigned int duration);
     void action_for_command(String *cmd);
     ////////////////////////
     private:
