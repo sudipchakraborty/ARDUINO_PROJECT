@@ -1,5 +1,6 @@
  #ifndef DOOR_H
  #define DOOR_H
+ #include <Arduino.h>
 //////////////////
 class door
 {
@@ -15,6 +16,7 @@ class door
     void PrintSensorStatus(void);
     void test_open(void);
     void test_close(void);
+    void action_for_command(String *cmd);
     ////////////////////////
     private:
     bool JoG_Completed(unsigned int val_inc, unsigned int val_cmp);

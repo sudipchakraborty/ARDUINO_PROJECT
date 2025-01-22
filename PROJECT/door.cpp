@@ -298,6 +298,12 @@ void door::set_door_close(void)
   digitalWrite(PIN_DIR, Dir_Close);
 }
 //___________________________________________________________________________________________________________________________________________________________________________________
+ /**
+ * @brief set motor direction bit as door close
+ * @param  void
+ * @param  void
+ * @return void
+ */
  bool door:: door_not_closed(void)
  {
     bool st=digitalRead(Close_Sensor_PIN);
@@ -305,6 +311,12 @@ void door::set_door_close(void)
     else return false;
  } 
  //___________________________________________________________________________________________________________________________________________________________________________________
+ /**
+ * @brief set motor direction bit as door close
+ * @param  void
+ * @param  void
+ * @return void
+ */
  bool door:: door_closed(void)
  {
     bool st=digitalRead(Close_Sensor_PIN);
@@ -312,6 +324,12 @@ void door::set_door_close(void)
     else return false;
  } 
  //___________________________________________________________________________________________________________________________________________________________________________________
+ /**
+ * @brief set motor direction bit as door close
+ * @param  void
+ * @param  void
+ * @return void
+ */
  bool door:: door_opened(void)
  {
     bool st=digitalRead(Open_Sensor_PIN);
@@ -319,6 +337,12 @@ void door::set_door_close(void)
     else return false;
  } 
  //__________________________________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief set motor direction bit as door close
+ * @param  void
+ * @param  void
+ * @return void
+ */
 void door::PrintSensorStatus(void)
 {
     bool cs=digitalRead(Close_Sensor_PIN);
@@ -329,6 +353,12 @@ void door::PrintSensorStatus(void)
  
 }
 //__________________________________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief set motor direction bit as door close
+ * @param  void
+ * @param  void
+ * @return void
+ */
 void door::test_close(void)
 {
    set_door_close();
@@ -340,6 +370,12 @@ void door::test_close(void)
    motor.updateDutyCycle(0);
 }
 //__________________________________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief set motor direction bit as door close
+ * @param  void
+ * @param  void
+ * @return void
+ */
 void door::test_open(void)
 {
    set_door_open();
@@ -350,6 +386,44 @@ void door::test_open(void)
    delay(40000);
    motor.updateDutyCycle(0);
 }
+//__________________________________________________________________________________________________________________________________________________________________________________
+/**
+ * @brief fuction to take action against user command through terminal
+ * @param  void
+ * @param  void
+ * @return void
+ */
+void door::action_for_command(String *cmd)
+{
+  String s=*cmd;
+
+  if(s=="f") // forward
+  {
+    String dist= *(cmd+1); 
+    int intValue = dist.toInt(); 
+    Serial.print("Motor Moving Forward  upto=");
+    Serial.println(String(intValue));
+  }
+  /////////////////////////
+  if(s=="r") // forward
+  {
+
+  }
+  /////////////////////////
+  if(s=="s") // start
+  {
+
+  }
+  /////////////////////////
+  if(s=="p") // start
+  {
+
+  }
+  /////////////////////////
+
+
+}
+//__________________________________________________________________________________________________________________________________________________________________________________
 
 
 
