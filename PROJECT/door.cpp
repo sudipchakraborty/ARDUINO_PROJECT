@@ -83,12 +83,17 @@ void door::handle(void)
   ////////////////////////////////////
   switch(FSM)
   {
+    case FSM_Idle:
+
+    break;
+    /////////////////////
     case FSM_Init:  
     // test_open(1000);
     // test_close();
     // PrintSensorStatus(); 
       // Serial3.println(" FSM state: FSM_Init.."); 
       // FSM=FSM_check_door_open;
+      FSM=FSM_Wait_For_Trigger;
     break;
     //////////////////
     case FSM_check_door_open:
@@ -130,14 +135,12 @@ void door::handle(void)
 
       if(btn_trig.pressed())
       {
-            Serial3.println("Button Pressed");
-            Serial3.println("Door is Opening Now....");
-            set_door_open();
-            Serial3.println("Going for intitial Jog..");
-            FSM=FSM_Initial_Jogg;
-            door_Activity=Door_Opening;
-            t1.setInterval(100);
-            motor.updateDutyCycle(5);
+          delay(1000);
+          test_open(5700);
+          delay(5000);
+
+          test_close(5300);
+          delay(2000);      
       }
       else
       {
@@ -243,6 +246,35 @@ void door::handle(void)
       }
     break;
     ////////////////////////
+    case FSM_Testing_Loop:
+    //  String dist= *(cmd+1); 
+    // int intValue = dist.toInt(); 
+     Serial.println("Door Opening upto=6000");
+    // Serial.println(String(intValue));
+    test_open(5700);
+
+    delay(3000);
+  /////////////////////////
+    // String dist= *(cmd+1); 
+    // int intValue = dist.toInt(); 
+     Serial.println("Door Closing upto=5500");
+    // Serial.println(String(intValue));
+    test_close(5300);
+
+    delay(2000);
+
+    loop_test_count--;
+    Serial.print("Loop Count=");
+    Serial.println(loop_test_count);
+
+    if(loop_test_count<=0)
+    {
+        FSM=FSM_Idle;
+        Serial.println(String("Loop Completed..."));
+    }
+    break;
+    /////////////////////////
+
     defult:
     break;
   } 
@@ -363,7 +395,7 @@ void door::test_close(unsigned int duration)
 {
    set_door_close();
    t1.setInterval(10);
-   motor.updateDutyCycle(20);
+   motor.updateDutyCycle(30);
    motor.enable();
 
    delay(duration);
@@ -380,7 +412,7 @@ void door::test_open(unsigned int duration)
 {
    set_door_open();
    t1.setInterval(10);
-   motor.updateDutyCycle(20);
+   motor.updateDutyCycle(30); // 20
    motor.enable();
 
    delay(duration);
@@ -423,11 +455,13 @@ void door::action_for_command(String *cmd)
     test_close(intValue);
   }
   /////////////////////////
-
-
-
-
-
+   if(s=="l") // forward
+  {
+     String dist= *(cmd+1); 
+     loop_test_count = dist.toInt(); 
+     FSM=FSM_Testing_Loop;
+  }
+  /////////////////////////
   if(s=="r") // forward
   {
 
@@ -443,8 +477,28 @@ void door::action_for_command(String *cmd)
 
   }
   /////////////////////////
-
-
+   if(s=="state") // start
+  {
+      switch(FSM)
+      {
+        case  FSM_Idle: Serial.println("FSM_Idle"); break;
+        case  FSM_Init: Serial.println("FSM_Init"); break;
+        case  FSM_check_door_open: Serial.println("FSM_check_door_open"); break;
+        case  FSM_Wait_For_Full_Close: Serial.println("FSM_Wait_For_Full_Close"); break;
+        case  FSM_Wait_For_Open_Sensor_trigger: Serial.println("FSM_Wait_For_Open_Sensor_trigger"); break;
+        case  FSM_Wait_For_Close_Sensor_Trigger: Serial.println("FSM_Wait_For_Close_Sensor_Trigger"); break;
+        case  FSM_Wait_For_Trigger: Serial.println("FSM_Wait_For_Trigger"); break;
+        case  FSM_Initial_Jogg: Serial.println("FSM_Initial_Jogg"); break;
+        case  FSM_Acceleration: Serial.println("FSM_Acceleration"); break;
+        case  FSM_Deceleration: Serial.println("FSM_Deceleration"); break;
+        case  FSM_Final_Jogg: Serial.println("FSM_Final_Jogg"); break;
+        case  FSM_Waiting_For_Terminal_Trigger: Serial.println("FSM_Waiting_For_Terminal_Trigger"); break;
+        case  FSM_Waiting_Door_Clear: Serial.println("FSM_Waiting_Door_Clear"); break;
+        case  FSM_Waiting_For_Full_Close: Serial.println("FSM_Waiting_For_Full_Close"); break;
+        case  FSM_Testing_Loop: Serial.println("FSM_Testing_Loop"); break;
+        default: break;
+        }
+  }
 }
 //__________________________________________________________________________________________________________________________________________________________________________________
 

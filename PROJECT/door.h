@@ -28,12 +28,14 @@ class door
     long temp;
     int TestCount;
     char door_Activity;
+    int loop_test_count;
 
 };
 
 
 enum FSM
 {
+  FSM_Idle,
   FSM_Init,
   FSM_check_door_open,
   FSM_Wait_For_Full_Close,
@@ -47,7 +49,8 @@ enum FSM
   FSM_Final_Jogg,
   FSM_Waiting_For_Terminal_Trigger,
   FSM_Waiting_Door_Clear,
-  FSM_Waiting_For_Full_Close
+  FSM_Waiting_For_Full_Close,
+  FSM_Testing_Loop
 };
 ///////////////////////////////////////
 #define  Tick  1000
