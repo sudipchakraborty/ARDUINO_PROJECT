@@ -80,11 +80,6 @@ void door::init(void)
  */
 void door::handle(void)
 {
-
-
-
-
-
   ////////////////////////////////////
   switch(FSM)
   {
@@ -113,20 +108,19 @@ void door::handle(void)
     case FSM_check_door_open:
       if(door_not_closed())
       {
-         Serial3.println("door_not_closed");
+         Serial.println("door_not_closed");
          delay(1000);
          set_door_close();
-         Serial3.println(" Set Motor Direction is to be closed");
+         Serial.println(" Set Motor Direction is to be closed");
          motor.updateDutyCycle(10);
          motor.enable();
          FSM=FSM_Wait_For_Full_Close;
       }
       else
       {
-         Serial3.println("door closed");
+         Serial.println("door closed.. going to wait for trigger..");
+         FSM=FSM_Wait_For_Trigger;
       }
-      return;
-
     break;
     ///////////////////
     case FSM_Wait_For_Full_Close:
@@ -134,12 +128,12 @@ void door::handle(void)
     if(door_closed())
     {
        motor.updateDutyCycle(0);
-       Serial3.println("\rdoor closed Now. Waiting for Trigger to open the door..");
+       Serial.println("\rdoor closed Now. Waiting for Trigger to open the door..");
        FSM=FSM_Wait_For_Trigger;
     }
     else
     {
-      Serial3.print("\rWaiting for door close="); Serial3.print(state_count);state_count++;
+      Serial.print("\rWaiting for door close="); Serial.print(state_count);state_count++;
     }
     break;
     ///////////////////////////////
@@ -149,7 +143,7 @@ void door::handle(void)
       {
           delay(1000);
           test_open(5700);
-          delay(5000);
+          delay(30000);
 
           test_close(5500);
           delay(2000);      
