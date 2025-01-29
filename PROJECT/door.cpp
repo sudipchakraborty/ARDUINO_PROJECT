@@ -16,7 +16,7 @@ extern timer1 t1;
 int state_count=0;
 
 #define Emergency_SW_PIN 3   // Switch 1 connected to pin 3
-#define Close_Sensor_PIN 19  // Switch 2 connected to pin 19
+#define Close_Sensor_PIN 35 //19  // Switch 2 connected to pin 19
 #define Open_Sensor_PIN 20  // Switch 3 connected to pin 20
 
 volatile bool Emergency_SW= false; // State of Switch 1
@@ -29,18 +29,18 @@ void EmergencySwISR()
   Serial3.println("Emergency Switch ");
 }
 ////////////////////////////////
-void CloseSensorISR() 
-{
-  motor.updateDutyCycle(0);
-  SensorTrigger=close;
-  cli(); // Disable all interrupts globally
-}
-///////////////////////////////
-void OpenSensorISR() 
-{ 
-  motor.updateDutyCycle(0);
-  SensorTrigger=open;
-}
+// void CloseSensorISR() 
+// {
+//   motor.updateDutyCycle(0);
+//   SensorTrigger=close;
+//   cli(); // Disable all interrupts globally
+// }
+// ///////////////////////////////
+// void OpenSensorISR() 
+// { 
+//   motor.updateDutyCycle(0);
+//   SensorTrigger=open;
+// }
 //___________________________________________________________________________________________________________________________________________________________
 door::door()
 {
@@ -80,6 +80,11 @@ void door::init(void)
  */
 void door::handle(void)
 {
+
+
+
+
+
   ////////////////////////////////////
   switch(FSM)
   {
@@ -88,17 +93,24 @@ void door::handle(void)
     break;
     /////////////////////
     case FSM_Init:  
-    // test_open(1000);
-    // test_close();
-    // PrintSensorStatus(); 
-      // Serial3.println(" FSM state: FSM_Init.."); 
-      // FSM=FSM_check_door_open;
-      FSM=FSM_Wait_For_Trigger;
+  
+    // if(door_not_closed())
+    //   {
+    //     Serial.println(" Door Open"); 
+    //   }
+    //   else
+    //   {
+    //     Serial.println(" Door CLOSED"); 
+    //   }
+    // // // test_open(1000);
+    // // test_close();
+    // // PrintSensorStatus(); 
+    //   // Serial3.println(" FSM state: FSM_Init.."); 
+      FSM=FSM_check_door_open;
+    //  FSM=FSM_Wait_For_Trigger;
     break;
     //////////////////
     case FSM_check_door_open:
-    return;
-
       if(door_not_closed())
       {
          Serial3.println("door_not_closed");
@@ -139,7 +151,7 @@ void door::handle(void)
           test_open(5700);
           delay(5000);
 
-          test_close(5300);
+          test_close(5500);
           delay(2000);      
       }
       else
@@ -397,9 +409,24 @@ void door::test_close(unsigned int duration)
    t1.setInterval(10);
    motor.updateDutyCycle(30);
    motor.enable();
+  //  delay(2000);
+  //    motor.updateDutyCycle(20);
+  //      delay(1000);
+  //    motor.updateDutyCycle(10);
 
    delay(duration);
    motor.updateDutyCycle(0);
+
+  //  if(door_not_closed())
+  //     {
+  //       Serial.println("Not close");
+  //     }
+  //     else
+  //     {
+  //        Serial.println("sensor close detected");
+  //          motor.updateDutyCycle(0);
+  //     }
+
 }
 //__________________________________________________________________________________________________________________________________________________________________________________
 /**
@@ -475,6 +502,18 @@ void door::action_for_command(String *cmd)
   if(s=="p") // start
   {
 
+  }
+  /////////////////////////
+  if(s=="sen_st") // start
+  {
+       if(door_not_closed())
+       {
+        Serial.println("Not Closed");
+       }
+       else
+       {
+        Serial.println("Closed");
+       }
   }
   /////////////////////////
    if(s=="state") // start
