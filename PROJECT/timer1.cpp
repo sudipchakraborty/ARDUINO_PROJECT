@@ -110,7 +110,7 @@ void timer1::disable()
  * @return void
  */
 //__________________________________________________________________________________________________________________________________________________________________
-void timer1::setInterval(long milliseconds)
+void timer1::target_count(long milliseconds)
 {
     targetVal = milliseconds;
     countReg = 0;

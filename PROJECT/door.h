@@ -17,6 +17,9 @@ class door
     void test_open(unsigned int duration);
     void test_close(unsigned int duration);
     void action_for_command(String *cmd);
+    void read_home_swicth(void);
+    void Simple_Method(void);
+    void trigger_calling_bell(void);
     ////////////////////////
     private:
     bool JoG_Completed(unsigned int val_inc, unsigned int val_cmp);
@@ -29,6 +32,7 @@ class door
     int TestCount;
     char door_Activity;
     int loop_test_count;
+    bool home_sw_status;
 
 };
 
@@ -68,6 +72,10 @@ enum FSM
 
 #define open  1
 #define close 2
+
+#define LED_Yellow  25
+#define LED_Green   27
+
 //___________________________________________________________________________________________________________________________________________________________
  #endif
 

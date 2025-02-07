@@ -17,6 +17,7 @@ void setup()
 //////////////////////////////////////////////
 void loop() 
 {
+
   cmd.handle();
   if(cmd.available()) {
     dr.action_for_command(cmd.parsedParts);

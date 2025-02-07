@@ -9,7 +9,7 @@ public:
     void init(long milliseconds);
     void enable();
     void disable();
-    void setInterval(long milliseconds);
+    void target_count(long milliseconds);
     void reset();
 
 private:
