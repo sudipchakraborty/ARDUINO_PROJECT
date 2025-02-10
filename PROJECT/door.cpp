@@ -158,6 +158,7 @@ void door::handle(void)
 
       if(btn_trig.pressed() || (btn_outSide.pressed()))
       {
+          bzr.beep();
           set_door_open();
           t1.target_count(10);
           motor.updateDutyCycle(10);
@@ -229,7 +230,7 @@ void door::handle(void)
         Serial.print("Decl_count_reg=");Serial.println(accl_count_reg);
         motor.updateDutyCycle(accl_count_reg);
         motor.enable();
-        if(accl_count_reg<=10)
+        if(accl_count_reg<=15)
         {
           Serial.println("\r\nDecl. Completed. Going to Jog Phase..");         
           t1.reset();
