@@ -54,6 +54,7 @@ door::door()
 void door::init(void)
 {
     pinMode(LED_Yellow,OUTPUT);
+    digitalWrite(LED_Yellow,HIGH);
     pinMode(PIN_DIR, OUTPUT);
     pinMode(Calling_Bell_Trigger, OUTPUT); 
     digitalWrite(Calling_Bell_Trigger,HIGH);
@@ -96,9 +97,8 @@ void door::init(void)
 void door::handle(void)
 {
   unsigned int temp;
- //  Simple_Method();
 
-
+  // Simple_Method();
   // return;
 
   if(btn_outSide.pressed())
@@ -158,176 +158,13 @@ void door::handle(void)
 
       if(btn_trig.pressed() || (btn_outSide.pressed()))
       {
-          Serial.println("Button Pressed...");
-          bzr.beep();
-          delay(1000); 
-          /////////////////////
-         // test_open(6500);
-        set_door_open();
-
-/// INIT JOG
-   motor.updateDutyCycle(10);
-   motor.enable();
-   delay(1000);
-
-    //////////ACL
-    temp=15;
-    do
-    {
-   motor.updateDutyCycle(temp);
-   motor.enable();
-   delay(250);
-   temp +=5;
-
-    }while(temp<=30);
-  ////////////////////
-
-  // JOG
-  delay(4000);
-  ///////////////////
-
-
- //////////ACL
-    temp=30;
-    do
-    {
-      motor.updateDutyCycle(temp);
-      motor.enable();
-      delay(250);
-      temp -=5;
-    }while(temp>=15);
-  ////////////////////
-  //  motor.updateDutyCycle(20);
-  //  motor.enable();
-
-    // digitalWrite(LED_Yellow,LOW);
-    //      while(!door_closed());
-    //      {
-    //        read_home_swicth();
-    //      }
-    //     motor.updateDutyCycle(0);
-        // digitalWrite(LED_Yellow,HIGH);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  //         set_door_open();
-  //  t1.target_count(10);
-  //  motor.updateDutyCycle(30); // 20
-  //  motor.enable();
-
-  //  delay(5600);
-  //   motor.updateDutyCycle(20); // 20
-  //  motor.enable();
-
-   int sw_count=0;
-   unsigned int exit_count=0;
-  while(1){
-      temp=digitalRead(PIN_sw_door_open);
-
-      if(temp==0)
-      {
-        sw_count++;
-        if(sw_count>10)
-        {
-          break;
-        }
-      }
-      else
-      {
-        sw_count=0;
-      }
-
-
-      delay(10);
-      exit_count++;
-      if(exit_count>=10000)
-      {
-          Serial.println("Sensor Error!!!. exit from loop");
-          break;
-      }
-     // Serial.println("waiting for sw");
-  }
-  
-      Serial.println("contact touched");
-
-   motor.updateDutyCycle(0);
-
-
-
-
-
-
-
-
-          ////////////////////////
-          delay(5000);
-          // test_close(4800);
-          set_door_close();
+          set_door_open();
           t1.target_count(10);
-
-
-/// INIT JOG
-   motor.updateDutyCycle(10);
-   motor.enable();
-   delay(1000);
-
-    //////////ACL
-    temp=15;
-    do
-    {
-   motor.updateDutyCycle(temp);
-   motor.enable();
-   delay(250);
-   temp +=5;
-
-    }while(temp<=30);
-  ////////////////////
-
-  // JOG
-  delay(3000);
-  ///////////////////
-
-
- //////////ACL
-    temp=30;
-    do
-    {
-      motor.updateDutyCycle(temp);
-      motor.enable();
-      delay(250);
-      temp -=5;
-    }while(temp>=15);
-  ////////////////////
-  //  motor.updateDutyCycle(20);
-  //  motor.enable();
-
-    digitalWrite(LED_Yellow,LOW);
-         while(!door_closed());
-         {
-           read_home_swicth();
-         }
-        motor.updateDutyCycle(0);
-        digitalWrite(LED_Yellow,HIGH);
-   
-      }
-      else
-      {
-        Serial3.print("\rFSM_Wait_For_Trigger="); Serial3.print(state_count);state_count++;
+          motor.updateDutyCycle(10);
+          motor.enable();
+          door_Activity=Door_Opening;   
+          FSM=FSM_Initial_Jogg;
+          Serial.println("Starting Initial Jog...");
       }
      break;
      ///////////////////
@@ -336,9 +173,9 @@ void door::handle(void)
       {
         t1.reset();
         Serial.println("\r\nInitial Jog Completed..Start Accelerating..");
+        t1.target_count(3);
         accl_count_reg=10;
-        t1.target_count(2);
-        FSM=FSM_Acceleration;    
+        FSM=FSM_Acceleration;
       } 
       else
       {
@@ -353,16 +190,19 @@ void door::handle(void)
         accl_count_reg++;
         Serial.print("accl_count_reg=");Serial.println(accl_count_reg);
         motor.updateDutyCycle(accl_count_reg);
+        motor.enable();
         if(accl_count_reg>=40)
         {
           jog_count_reg=0;
-          Serial.println("\r\nAcceleration Completed. Going to Jog Phase..");
+          Serial.println("\r\nAcceleration Completed. Going to Jog Phase..");         
+          t1.reset();
+          t1.target_count(50);
           FSM=FSM_Jog;
         }
       }
       else
       {
-        Serial.print("\r Door acclerting... Target Count="); Serial.print(t1.targetVal); Serial.print(" of "); Serial.println(t1.countReg);  
+        // Serial.print("\r Door acclerting... Target Count="); Serial.print(t1.targetVal); Serial.print(" of "); Serial.println(t1.countReg);  
       }
 
    break;
@@ -371,13 +211,13 @@ void door::handle(void)
    if(t1.completed)
       {
         t1.reset();
-        jog_count_reg++;   
-        Serial.print("\rJog Count=");Serial.print(jog_count_reg);  
-        if(jog_count_reg>=30)
-        {
-          Serial.println("\r\nJog Completed. Going to deceleration..");
-          FSM=FSM_Deceleration;
-        }
+        Serial.println("\r\nJog Completed. Going to deceleration..");
+        t1.target_count(3);
+        accl_count_reg=40;
+          // motor.updateDutyCycle(0);
+          // while(1);
+        FSM=FSM_Deceleration;
+        
       }
    break;
      ///////////////////
@@ -386,14 +226,15 @@ void door::handle(void)
       {
         t1.reset();
         accl_count_reg--;
-        Serial.print("\rdecl_count_reg=");Serial.println(accl_count_reg);  
+        Serial.print("Decl_count_reg=");Serial.println(accl_count_reg);
         motor.updateDutyCycle(accl_count_reg);
-        if(accl_count_reg<15)
+        motor.enable();
+        if(accl_count_reg<=10)
         {
-          Serial.println("\r\nDeceleration Completed. Waiting for Sensor..");
-          jog_count_reg=0;
+          Serial.println("\r\nDecl. Completed. Going to Jog Phase..");         
+          t1.reset();
+          t1.target_count(5);
           FSM=FSM_Final_Jogg;
-          SensorTrigger=false;
         }
       }
    break;
@@ -402,51 +243,59 @@ void door::handle(void)
 
       if(t1.completed)
       {
-          t1.reset();
-          jog_count_reg++;
-
-          if(jog_count_reg>100)
-          {        
-                if(door_Activity==Door_Opening)
-                {   
-                    Serial.println("door_Activity=Door_Opening");
-                    motor.updateDutyCycle(0);
-                    Serial.print("\r\nMotor Stopped");
-                    delay(15000);         
-                    TestCount++;
-                    door_Activity=Door_Closing;   
-          
-                    Serial.println("Door is closing Now....");
-                    set_door_close();
-                    Serial.println("Going for intitial Jog..");
-                    t1.target_count(100);
-                    motor.updateDutyCycle(10);
-                    FSM=FSM_Initial_Jogg;
-                }
-                else if(door_Activity==Door_Closing)
-                {
-                  Serial.println("door_Activity=Door_Closing");
-                  if(door_closed())
-                  {
-                    motor.updateDutyCycle(0);
-                    Serial.print("\r\n close Sensor Triggered. Motor Stopped");
-                    delay(50);         
-                    TestCount++;       
-                    FSM=FSM_Wait_For_Trigger;
-                  }
-                }
-                else
-                {
-                    Serial.println("door_Activity=Unknown");
-                }
-          }
-          else
+         //////////////////////////////////
+         if(door_Activity==Door_Opening)
           {
-             Serial.print("\rFinal Jog. Jog Count=");Serial.println(jog_count_reg);  
+            temp=digitalRead(PIN_sw_door_open);
+            if(temp==0)
+            {
+                motor.updateDutyCycle(0);
+                Serial.println("Sensor contacted");
+                digitalWrite(LED_Yellow,LOW);
+                t1.target_count(500);
+                FSM=FSM_Waiting_to_Start_Close; 
+                bzr_interval=1000;   
+            }
           }
+          /////////////////////////////////////
+          else if(door_Activity==Door_Closing)
+          {
+             if(door_closed())
+             {
+                motor.updateDutyCycle(0);
+                Serial.println("Sensor close contacted");
+                FSM=FSM_Wait_For_Trigger;    
+            }
+          }
+          else{}
+          //////////////////////////////////////
+          t1.reset();
       }
+      /////////////////////////
     break;
     ////////////////////////
+    case FSM_Waiting_to_Start_Close:
+
+      if((t1.completed) || (btn_trig.pressed() || (btn_outSide.pressed())))
+      {
+          set_door_close();
+          t1.target_count(10);
+          motor.updateDutyCycle(10);
+          motor.enable();
+          door_Activity=Door_Closing;   
+          FSM=FSM_Initial_Jogg;
+          Serial.println("Starting Initial Jog...");
+          t1.reset();
+          digitalWrite(LED_Yellow,HIGH);
+      } 
+      else
+      {
+        bzr.beep(50);
+        delay(bzr_interval);
+        bzr_interval=bzr_interval-50;
+      }  
+    break;
+    ///////////////////////////
     case FSM_Testing_Loop:
     //  String dist= *(cmd+1); 
     // int intValue = dist.toInt(); 

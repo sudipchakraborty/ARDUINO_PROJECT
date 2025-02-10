@@ -33,6 +33,7 @@ class door
     char door_Activity;
     int loop_test_count;
     bool home_sw_status;
+    unsigned int bzr_interval;
 
 };
 
@@ -54,7 +55,8 @@ enum FSM
   FSM_Waiting_For_Terminal_Trigger,
   FSM_Waiting_Door_Clear,
   FSM_Waiting_For_Full_Close,
-  FSM_Testing_Loop
+  FSM_Testing_Loop,
+  FSM_Waiting_to_Start_Close
 };
 ///////////////////////////////////////
 #define  Tick  1000

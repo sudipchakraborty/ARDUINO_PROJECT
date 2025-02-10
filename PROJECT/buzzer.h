@@ -7,6 +7,7 @@ class buzzer
            buzzer();
       void init(char pin);
       void beep(void);
+      void beep(unsigned int val);
       void on(void);
       void off(void);
     private:
