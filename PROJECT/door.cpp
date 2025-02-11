@@ -101,11 +101,11 @@ void door::handle(void)
   // Simple_Method();
   // return;
 
-  if(btn_outSide.pressed())
-  {
-    // bzr.beep();
-    trigger_calling_bell();
-  }
+  // if(btn_outSide.pressed())
+  // {
+  //   // bzr.beep();
+  //   trigger_calling_bell();
+  // }
 
   read_home_swicth();
   ////////////////////////////////////
@@ -155,6 +155,12 @@ void door::handle(void)
     break;
     ///////////////////////////////
      case FSM_Wait_For_Trigger:
+
+       if(btn_outSide.pressed())
+  {
+    // bzr.beep();
+    trigger_calling_bell();
+  }
 
       if(btn_trig.pressed() || (btn_outSide.pressed()))
       {
