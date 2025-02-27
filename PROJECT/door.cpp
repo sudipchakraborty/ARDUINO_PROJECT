@@ -151,7 +151,7 @@ void door::handle(void)
     else
     {
       Serial.print("\r Waiting for door close. Target Count="); Serial.print(t1.targetVal); Serial.print(" of "); Serial.println(t1.countReg);  
-    }
+    } 
     break;
     ///////////////////////////////
      case FSM_Wait_For_Trigger:
@@ -162,8 +162,9 @@ void door::handle(void)
     trigger_calling_bell();
   }
 
-      if(btn_trig.pressed() || (btn_outSide.pressed()))
+      if(btn_trig.pressed() || (btn_outSide.pressed())||(Web_Command=="Open"))
       {
+          Web_Command="";
           bzr.beep();
           set_door_open();
           t1.target_count(10);

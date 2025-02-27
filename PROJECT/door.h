@@ -20,6 +20,7 @@ class door
     void read_home_swicth(void);
     void Simple_Method(void);
     void trigger_calling_bell(void);
+    String Web_Command="";
     ////////////////////////
     private:
     bool JoG_Completed(unsigned int val_inc, unsigned int val_cmp);
@@ -34,6 +35,7 @@ class door
     int loop_test_count;
     bool home_sw_status;
     unsigned int bzr_interval;
+
 
 };
 
