@@ -28,6 +28,8 @@ volatile bool Emergency_SW= false; // State of Switch 1
 volatile bool Close_Sensor= false; // State of Switch 2
 volatile bool Open_Sensor= false; // State of Switch 3
 volatile  char SensorTrigger=false;
+
+unsigned long SensorErrCount=0;
 /////////////////////////////////////
 void EmergencySwISR() 
 {
@@ -243,6 +245,7 @@ void door::handle(void)
           t1.reset();
           t1.target_count(5);
           FSM=FSM_Final_Jogg;
+          SensorErrCount=0;
         }
       }
    break;
@@ -251,12 +254,15 @@ void door::handle(void)
 
       if(t1.completed)
       {
+        SensorErrCount++;
          //////////////////////////////////
          if(door_Activity==Door_Opening)
           {
             temp=digitalRead(PIN_sw_door_open);
-            if(temp==0)
+
+            if((temp==0)||(SensorErrCount>100))
             {
+                SensorErrCount=0;
                 motor.updateDutyCycle(0);
                 Serial.println("Sensor contacted");
                 digitalWrite(LED_Yellow,LOW);
@@ -268,8 +274,9 @@ void door::handle(void)
           /////////////////////////////////////
           else if(door_Activity==Door_Closing)
           {
-             if(door_closed())
+             if((door_closed()) ||(SensorErrCount>100))
              {
+                SensorErrCount=0;
                 motor.updateDutyCycle(0);
                 Serial.println("Sensor close contacted");
                 FSM=FSM_Wait_For_Trigger;    
