@@ -5,6 +5,12 @@
 #include "PWM.h"
 #include "virtualCounter.h"
 #include "timer1.h"
+////////////////////////
+#include "StatusBlink.h"
+
+#include "CommandParser.h"
+#include <ArduinoJson.h>
+#include "Arduino.h"
 ///////////////////////
 button btn_trig;
 button btn_home;
@@ -30,6 +36,12 @@ volatile bool Open_Sensor= false; // State of Switch 3
 volatile  char SensorTrigger=false;
 
 unsigned long SensorErrCount=0;
+
+
+StatusBlink st;
+CommandParser cmd;
+
+String receivedDataMega = ""; // Buffer to store incoming data
 /////////////////////////////////////
 void EmergencySwISR() 
 {
@@ -88,6 +100,11 @@ void door::init(void)
     FSM=FSM_Idle;
     bzr.beep();
     pinMode(LED_Green, OUTPUT);
+    ////////////
+    cmd.init();
+    st.init(23,1000);
+    Serial.begin(115200); 
+    Serial3.begin(115200);
 }
 //___________________________________________________________________________________________________________________________________________________________
 /**
@@ -679,7 +696,93 @@ void door:: trigger_calling_bell(void)
     digitalWrite(Calling_Bell_Trigger,HIGH);
 }
 //__________________________________________________________________________________________________________________________________________________________________________________
+void door:: Handle_loop(void) 
+{
+  cmd.handle();
+  if(cmd.available()) {
+    action_for_command(cmd.parsedParts);
+    }
+  st.blink();
+  handle();
+  /////////////////////
+  if(Serial3.available()) 
+  {  // Read all available data
+        char receivedChar = Serial3.read();
 
+        if (receivedChar == '\n') 
+        { // Message complete
+            Serial.print("Full Message Received: ");
+            Serial.println(receivedDataMega);
+
+            StaticJsonDocument<256> doc; // Create JSON document (adjust size as needed)
+    
+            DeserializationError error = deserializeJson(doc, receivedDataMega);
+            receivedDataMega = ""; // Clear buffer    
+            
+            if (error) {
+                Serial.print("JSON Parsing Error: ");
+                Serial.println(error.c_str());
+            }
+
+            // Example: Extracting values from JSON
+            const char* command = doc["command"];
+            const char* value = doc["value"];
+
+            // // Process the extracted data
+            // Serial.print("Command: ");
+            // Serial.println(command);
+            // Serial.print("Value: ");
+            // Serial.println(value);
+
+             // Example: Implementing commands
+            if ((strcmp(command, "Door") == 0) && (strcmp(value, "Open") == 0))
+            {
+                Web_Command="Open";
+                receivedDataMega = ""; // Clear buffer    
+            } 
+        }
+        else 
+        {
+            receivedDataMega += receivedChar; // Append to buffer
+         //   Serial.print(receivedDataMega);
+        }
+    
+}
+}
+///////////////////////////////////////////////
+
+// // Function to parse JSON string
+// StaticJsonDocument<256> parseJSON(String jsonString) 
+// {
+//     StaticJsonDocument<256> doc; // Create JSON document (adjust size as needed)
+    
+//     DeserializationError error = deserializeJson(doc, jsonString);
+//     if (error) {
+//         Serial.print("JSON Parsing Error: ");
+//         Serial.println(error.c_str());
+//     }
+    
+//     return doc;  // Return the parsed JSON object
+
+//     // Example: Extracting values from JSON
+//     const char* command = doc["command"];
+//     int value = doc["value"];
+
+//     // Process the extracted data
+//     Serial.print("Command: ");
+//     Serial.println(command);
+//     Serial.print("Value: ");
+//     Serial.println(value);
+    
+//     // Example: Implementing commands
+//     if (strcmp(command, "LED_ON") == 0) {
+//         digitalWrite(13, HIGH);
+//         Serial.println("LED turned ON");
+//     } else if (strcmp(command, "LED_OFF") == 0) {
+//         digitalWrite(13, LOW);
+//         Serial.println("LED turned OFF");
+//     }
+// }
 
 
 

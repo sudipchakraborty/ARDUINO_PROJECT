@@ -21,6 +21,8 @@ class door
     void Simple_Method(void);
     void trigger_calling_bell(void);
     String Web_Command="";
+
+    void Handle_loop(void); 
     ////////////////////////
     private:
     bool JoG_Completed(unsigned int val_inc, unsigned int val_cmp);
